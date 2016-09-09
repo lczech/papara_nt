@@ -13,4 +13,3 @@ g++ -o papara -O3 -msse4a -std=c++11 -I. -I ivy_mike/src/ -I ublasJama-1.0.2.3 p
 # -I/usr/include/boost141/
 
 # Otherwise if you get compile errors related to boost, download+unpack the latest boost version from boost.org and add -I<boost dir> to the commandline.
-
