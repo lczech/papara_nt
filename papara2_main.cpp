@@ -1,8 +1,8 @@
 /*
  * Copyright (C) 2009-2012 Simon A. Berger
- * 
+ *
  * This file is part of papara.
- * 
+ *
  *  papara is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation, either version 3 of the License, or
@@ -78,8 +78,8 @@ void print_help( std::ostream &os, const std::vector<std::string> &options, cons
 
         os << "\n";
     }
-    
-    
+
+
 }
 
 
@@ -110,7 +110,7 @@ void print_help( std::ostream &os ) {
 
     options.push_back( "-p" );
     text.push_back( "User defined scoring scheme: <open>:<extend>:<match>:<match cg>@The default scores correspond to '-p -3:-1:2:-3'" );
-    
+
     print_help( os, options, text );
 
 }
@@ -125,18 +125,18 @@ void run_papara( const std::string &qs_name, const std::string &alignment_name, 
 
     queries<seq_tag> qs(qs_name.c_str());
 
-    
-    
-    
+
+
+
     t1.add_int();
     references<pvec_t,seq_tag> refs( tree_name.c_str(), alignment_name.c_str(), &qs );
 
-    
-    
+
+
     t1.add_int();
 
     qs.preprocess();
-   
+
     t1.add_int();
 
     refs.remove_full_gaps();
@@ -147,25 +147,25 @@ void run_papara( const std::string &qs_name, const std::string &alignment_name, 
             std::cout << "REMARK: using per-gene alignment deactivates reference-side gaps!\n";
             ref_gaps = false;
         }
-        
-        
+
+
         //qs.init_partition_assignments( *part_assign );
         std::vector<std::pair<size_t,size_t> > qs_bounds = partassign::resolve_qs_bounds( refs, qs, *part_assign );
-        
-        
+
+
         qs.set_per_qs_bounds( qs_bounds );
-        
-        
+
+
     } else if( fixed_qs_bounds.first != size_t(-1) ) {
 	ref_gaps = false;
 	std::cout << "fixed bounds " << fixed_qs_bounds.first << " " << fixed_qs_bounds.second << "\n";
         std::vector<std::pair<size_t,size_t> > qs_bounds( qs.size(), fixed_qs_bounds );
         qs.set_per_qs_bounds( qs_bounds );
     }
-    
-    
-    
-    
+
+
+
+
     t1.add_int();
 
 //     t1.print();
@@ -207,11 +207,11 @@ void run_papara( const std::string &qs_name, const std::string &alignment_name, 
     } else {
         oa.reset( new papara::output_alignment_phylip( score_file.c_str() ));
     }
-    
+
     //refs.write_seqs(os, pad);
     //     driver<pvec_t,seq_tag>::align_best_scores( os, os_qual, os_cands, qs, refs, res, pad, ref_gaps, sp );
     driver<pvec_t,seq_tag>::align_best_scores_oa( oa.get(), qs, refs, res, pad, ref_gaps, sp );
-    
+
 }
 
 
@@ -225,7 +225,7 @@ void print_commandline( std::ostream &os, char **argv, int argc ) {
 
 int main( int argc, char *argv[] ) {
 
-    
+
     namespace igo = ivy_mike::getopt;
 
     ivy_mike::getopt::parser igp;
@@ -234,7 +234,7 @@ int main( int argc, char *argv[] ) {
     std::string opt_alignment_name;
     std::string opt_qs_name;
     std::string opt_user_parameters;
-    
+
     std::string opt_blast_hits;
     std::string opt_partitions;
     std::string opt_partition_name;
@@ -248,7 +248,7 @@ int main( int argc, char *argv[] ) {
     bool opt_no_ref_gaps;
     bool opt_print_help;
     bool opt_write_fasta;
-    
+
     igp.add_opt( 't', igo::value<std::string>(opt_tree_name) );
     igp.add_opt( 's', igo::value<std::string>(opt_alignment_name) );
     igp.add_opt( 'q', igo::value<std::string>(opt_qs_name) );
@@ -265,7 +265,7 @@ int main( int argc, char *argv[] ) {
     igp.add_opt( 'l', igo::value<std::string>(opt_blast_hits) );
     igp.add_opt( 'x', igo::value<std::string>(opt_partitions) );
     igp.add_opt( 'k', igo::value<std::string>(opt_partition_name) );
-    
+
     igp.parse(argc,argv);
 
     if( opt_print_help ) {
@@ -273,10 +273,10 @@ int main( int argc, char *argv[] ) {
         std::cerr << "\nUser options:\n";
         print_help( std::cerr);
         return 0;
-        
+
     }
-         
-    
+
+
     if( igp.opt_count('t') != 1 || igp.opt_count('s') != 1 ) {
         print_banner(std::cerr);
 
@@ -285,32 +285,32 @@ int main( int argc, char *argv[] ) {
         print_help( std::cerr );
         return 0;
     }
-    
+
     // optional accelration by blast hits/partition file
     std::unique_ptr<partassign::part_assignment> part_assignment;
-    
+
     std::pair<size_t,size_t> fixed_qs_bounds(-1,-1);
-    
+
     if( igp.opt_count('l') == 1  ) {
         if( igp.opt_count('l') != igp.opt_count('x') ) {
             std::cerr << "options -l and -x have to be used together (or not at all)\n";
             print_help( std::cerr );
             return 0;
         }
-        
+
         std::ifstream blast_is( opt_blast_hits.c_str() );
         if( !blast_is.good() ) {
             std::cerr << "can not open blast hits file\n";
             return 0;
         }
-        
+
         std::ifstream part_is( opt_partitions.c_str() );
         if( !part_is.good() ) {
             std::cerr << "can not open partition file\n";
             return 0;
         }
-        
-        
+
+
         part_assignment.reset( new partassign::part_assignment( blast_is, part_is ));
     } else if(igp.opt_count('k') == 1 ) {
         std::ifstream part_is( opt_partitions.c_str() );
@@ -318,7 +318,7 @@ int main( int argc, char *argv[] ) {
             std::cerr << "can not open partition file\n";
             return 0;
         }
-        
+
         fixed_qs_bounds = partassign::partition_bounds( part_is, opt_partition_name );
         std::cout << fixed_qs_bounds.first << " " << fixed_qs_bounds.second << "\n";
         if( fixed_qs_bounds.first == size_t(-1) || fixed_qs_bounds.second == size_t(-1) ) {
@@ -330,9 +330,9 @@ int main( int argc, char *argv[] ) {
         print_help( std::cerr );
         return 0;
     }
-        
-    
-    
+
+
+
     ivy_mike::timer t;
 
 //    const char *qs_name = 0;
@@ -346,21 +346,21 @@ int main( int argc, char *argv[] ) {
         std::cout << "log file already exists for run '" << opt_run_name << "'\n";
         return 0;
     }
-    
-    
+
+
     papara::add_log_tee papara_log_cout( std::cout );
-    
+
     std::ofstream logs( log_filename.c_str());
     if( !logs ) {
         std::cout << "could not open logfile for writing: " << log_filename << std::endl;
         return 0;
     }
-    
-    
+
+
     papara::add_log_tee papara_log_file( logs );
 
     papara::lout << "papara called as:\n";
-    print_commandline( papara::lout, argv, argc ); 
+    print_commandline( papara::lout, argv, argc );
 
     const bool ref_gaps = !opt_no_ref_gaps;
 
@@ -368,11 +368,11 @@ int main( int argc, char *argv[] ) {
     papara_score_parameters sp = papara_score_parameters::default_scores();
     if( !opt_user_parameters.empty() ) {
         std::cout << "meeeeep\n";
-        
+
         sp = papara_score_parameters::parse_scores(opt_user_parameters.c_str());
     }
-    
-    
+
+
     if( opt_use_cgap ) {
 
         if( opt_aa ) {
@@ -391,10 +391,9 @@ int main( int argc, char *argv[] ) {
     std::cout << t.elapsed() << std::endl;
     lout << "SUCCESS " << t.elapsed() << std::endl;
 
-    
-    
-    
+
+
+
     return 0;
 //     getchar();
 }
-
