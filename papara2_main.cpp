@@ -24,6 +24,10 @@
 
 #include "papara.h"
 
+#ifdef __MPI
+#include "mpi.h"
+#endif
+
 using namespace papara;
 
 // namespace papara {
@@ -225,6 +229,14 @@ void print_commandline( std::ostream &os, char **argv, int argc ) {
 
 int main( int argc, char *argv[] ) {
 
+#ifdef __MPI
+
+    MPI_Init(&argc, &argv);
+    int world_rank, world_size;
+    MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &world_size);
+
+#endif
 
     namespace igo = ivy_mike::getopt;
 
@@ -238,7 +250,7 @@ int main( int argc, char *argv[] ) {
     std::string opt_blast_hits;
     std::string opt_partitions;
     std::string opt_partition_name;
-    
+
     bool opt_use_cgap;
     int opt_num_threads;
     std::string opt_run_name;
@@ -339,7 +351,21 @@ int main( int argc, char *argv[] ) {
 //    if( !opt_qs_name.empty() ) {
 //        qs_name = opt_qs_name.c_str();
 //    }
-//
+
+
+
+#ifdef __MPI
+
+    std::string mod_run_name(opt_run_name + "_" + std::to_string( world_rank ));
+    std::string log_filename = filename( mod_run_name, "log" );
+
+    if( opt_run_name != "default" && !opt_force_overwrite && file_exists(log_filename.c_str()) ) {
+        std::cout << "log file already exists for run '" << mod_run_name << "'\n";
+        return 0;
+    }
+
+#else
+
     std::string log_filename = filename( opt_run_name, "log" );
 
     if( opt_run_name != "default" && !opt_force_overwrite && file_exists(log_filename.c_str()) ) {
@@ -347,6 +373,9 @@ int main( int argc, char *argv[] ) {
         return 0;
     }
 
+    auto mod_run_name = opt_run_name;
+
+#endif
 
     papara::add_log_tee papara_log_cout( std::cout );
 
@@ -373,26 +402,78 @@ int main( int argc, char *argv[] ) {
     }
 
 
-    if( opt_use_cgap ) {
+#ifdef __MPI
 
-        if( opt_aa ) {
-            run_papara<pvec_cgap, tag_aa>( opt_qs_name, opt_alignment_name, opt_tree_name, opt_num_threads, opt_run_name, ref_gaps, sp, opt_write_fasta, part_assignment.get(), fixed_qs_bounds );
-        } else {
-            run_papara<pvec_cgap, tag_dna>( opt_qs_name, opt_alignment_name, opt_tree_name, opt_num_threads, opt_run_name, ref_gaps, sp, opt_write_fasta, part_assignment.get(), fixed_qs_bounds );
-        }
+    std::vector<std::string> files;
+
+    // split filenames
+    std::istringstream ss(opt_qs_name);
+    std::string item;
+    while (getline(ss, item, ',')) {
+        files.push_back(item);
+    }
+
+    // User output.
+    lout << "\nFound " << files.size() << " files:\n";
+    for( auto const& file : files ) {
+        lout << "    " << file << "\n";
+    }
+    lout << "\n";
+
+    // World size checks.
+    if( world_size > files.size() ) {
+        lout << "Using " << world_size << " ranks, but only " << files.size() << " files.\n"
+             << "Some ranks are without work - maybe you want to reduce the MPI size.\n\n";
+    }
+    if( world_size < files.size() ) {
+        lout << "Using " << world_size << " ranks, but have " << files.size() << " files.\n"
+             << "WARNING: The last " << ( files.size() - world_size ) << " files will not be processed!\n\n";
+    }
+
+    // Assign qs file to rank.
+    std::string qs_file_name = "";
+    if( world_rank < files.size() ) {
+        qs_file_name = files.at( world_rank );
+        lout      << "This is rank " << world_rank << " for file " << qs_file_name << "\n\n";
     } else {
-        if( opt_aa ) {
-            run_papara<pvec_pgap, tag_aa>( opt_qs_name, opt_alignment_name, opt_tree_name, opt_num_threads, opt_run_name, ref_gaps, sp, opt_write_fasta, part_assignment.get(), fixed_qs_bounds );
+        lout      << "This is rank " << world_rank << ". No work, finishing now.\n\n";
+    }
+
+    MPI_Barrier(MPI_COMM_WORLD);
+
+#else
+
+    auto qs_file_name = opt_qs_name;
+
+#endif
+
+
+    if( qs_file_name != "" ) {
+        if( opt_use_cgap ) {
+
+            if( opt_aa ) {
+                run_papara<pvec_cgap, tag_aa>( qs_file_name, opt_alignment_name, opt_tree_name, opt_num_threads, mod_run_name, ref_gaps, sp, opt_write_fasta, part_assignment.get(), fixed_qs_bounds );
+            } else {
+                run_papara<pvec_cgap, tag_dna>( qs_file_name, opt_alignment_name, opt_tree_name, opt_num_threads, mod_run_name, ref_gaps, sp, opt_write_fasta, part_assignment.get(), fixed_qs_bounds );
+            }
         } else {
-            run_papara<pvec_pgap, tag_dna>( opt_qs_name, opt_alignment_name, opt_tree_name, opt_num_threads, opt_run_name, ref_gaps, sp, opt_write_fasta, part_assignment.get(), fixed_qs_bounds );
+            if( opt_aa ) {
+                run_papara<pvec_pgap, tag_aa>( qs_file_name, opt_alignment_name, opt_tree_name, opt_num_threads, mod_run_name, ref_gaps, sp, opt_write_fasta, part_assignment.get(), fixed_qs_bounds );
+            } else {
+                run_papara<pvec_pgap, tag_dna>( qs_file_name, opt_alignment_name, opt_tree_name, opt_num_threads, mod_run_name, ref_gaps, sp, opt_write_fasta, part_assignment.get(), fixed_qs_bounds );
+            }
         }
     }
 
-    std::cout << t.elapsed() << std::endl;
+    // std::cout << t.elapsed() << std::endl;
     lout << "SUCCESS " << t.elapsed() << std::endl;
 
+#ifdef __MPI
 
+    MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Finalize();
 
+#endif
 
     return 0;
 //     getchar();
