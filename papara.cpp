@@ -1,8 +1,8 @@
 /*
  * Copyright (C) 2009-2012 Simon A. Berger
- * 
+ *
  * This file is part of papara.
- * 
+ *
  *  papara is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation, either version 3 of the License, or
@@ -50,26 +50,26 @@ class log_stream_buffer : public std::streambuf
 {
 
 public:
-    
+
     log_stream_buffer() : buffer_(120) {
-        
+
     }
 
     void post( char overflow, char *start, char *end ) {
         for( std::vector< std::ostream* >::iterator it = log_tees.begin(); it != log_tees.end(); ++it ) {
             std::copy( start, end, std::ostream_iterator<char>( *(*it) ));
-            
+
             if( overflow != 0 ) {
                 (*it)->put(overflow);
             }
         }
-        
-        
+
+
         for( std::vector< log_sink* >::iterator it = log_sinks.begin(); it != log_sinks.end(); ++it ) {
             (*it)->post( overflow, start, end );
         }
     }
-    
+
     int_type overflow(int c) {
 
 
@@ -84,12 +84,12 @@ public:
         //            std::cout << "sync:";
         //            std::copy( pbase(), pptr(), std::ostream_iterator<char>(std::cout));
         //            std::cout << std::endl;
-        
+
         post( 0, pbase(), pptr() );
         setp(&buffer_.front(), (&buffer_.back()) + 1);
         return 0;
     }
-    
+
     void add_tee( std::ostream *os ) {
         log_tees.push_back(os);
     }
@@ -99,7 +99,7 @@ public:
             log_tees.erase(it);
         }
     }
-    
+
     void add_sink( log_sink *s ) {
         log_sinks.push_back(s);
     }
@@ -109,7 +109,7 @@ public:
             log_sinks.erase(it);
         }
     }
-    
+
 private:
    // copy ctor and assignment not implemented;
     // copying not allowed
@@ -125,19 +125,19 @@ private:
 // class log_stream_buffer : public std::filebuf
 // {
 //     std::vector<std::ostream *> log_tees;
-//     
+//
 // public:
-//     log_stream_buffer() { 
-//         //filebuf::open("NUL", ios::out); 
+//     log_stream_buffer() {
+//         //filebuf::open("NUL", ios::out);
 //     }
-//     
+//
 //     void open(const char *fname);
-// //     void close() { 
+// //     void close() {
 // // //         _win.close(); filebuf::close();
-// //         
-// //     } 
+// //
+// //     }
 //     virtual int sync();
-//     
+//
 //     void add_tee( std::ostream *os ) {
 //         log_tees.push_back(os);
 //     }
@@ -148,32 +148,32 @@ private:
 //         }
 //     }
 // private:
-//     
+//
 // };
 // void log_stream_buffer::open(const char *fname)
-// {  
+// {
 //     std::filebuf::close();
 //     if( fname != 0 ) {
 //         std::cerr << "log file: " << fname << "\n";
 //         std::filebuf::open(fname, std::ios::out | std::ios::app | std::ios::trunc );
 //         assert(std::filebuf::is_open());
 //     }
-// 
-// } 
+//
+// }
 // int log_stream_buffer::sync()
-// {  
+// {
 //     //     pbase();
 //     //     pptr()
-//     //     
+//     //
 //     //     int count = std::filebuf::out_waiting();
 //     // _win.append(pbase(), count);
 //     std::cerr << "sync: " << std::distance(pbase(), pptr()) << "\n";
 //     for( std::vector< std::ostream* >::iterator it = log_tees.begin(); it != log_tees.end(); ++it ) {
 //         std::copy( pbase(), pptr(), std::ostream_iterator<char>( *(*it) ));
 //     }
-//     return std::filebuf::sync(); 
+//     return std::filebuf::sync();
 // }
-      
+
 
 static log_stream_buffer ls_buf;
 std::ostream papara::lout(&ls_buf);
@@ -182,14 +182,14 @@ static ivy_mike::mutex log_buffer_mutex;
 
 
 // open_log_file::open_log_file( const char *filename ) {
-//     
+//
 //     ivy_mike::lock_guard<ivy_mike::mutex> lock( log_buffer_mutex );
 //     if( log_is_open ) {
 //         std::cerr << "papara logfile is already open." << std::endl;
 //         abort();
 //     }
-//     
-//     
+//
+//
 //     ls_buf.open(filename);
 //     log_is_open = true;
 // }
@@ -239,38 +239,38 @@ queries<seq_tag>::queries( const std::string &opt_qs_name ) {
     //
     // read query sequences
     //
-    
+
     if( !opt_qs_name.empty() ) {
         std::ifstream qsf( opt_qs_name.c_str() );
-        
+
         if( !qsf.good() ) {
             throw std::runtime_error( "cannot open qs file");
         }
-        
+
         // mix them with the qs from the ref alignment <-- WTF? must have been sniffing whiteboard cleaner... the qs are read before the ref seqs...
         read_fasta( qsf, m_qs_names, m_qs_seqs);
     }
-    
+
     //            if( m_qs_names.empty() ) {
         //                throw std::runtime_error( "no qs" );
         //            }
-        
+
         std::for_each( m_qs_names.begin(), m_qs_names.end(), std::ptr_fun( normalize_name ));
-        
+
         //
         // setup qs best-score/best-edge lists
         //
-        
-        
+
+
         m_qs_pvecs.resize( m_qs_names.size() );
         //        }
         //        m_qs_bestscore.resize(m_qs_names.size());
         //        std::fill( m_qs_bestscore.begin(), m_qs_bestscore.end(), 32000);
         //        m_qs_bestedge.resize(m_qs_names.size());
-        
-        
-        
-        
+
+
+
+
 }
 template<typename seq_tag>
 void queries<seq_tag>::preprocess() {
@@ -286,9 +286,9 @@ void queries<seq_tag>::preprocess() {
     m_qs_cseqs.resize(m_qs_seqs.size());
 
     std::vector<bool> bad_characters( 256, false );
-    
-    
-    
+
+
+
     for( size_t i = 0; i < m_qs_seqs.size(); i++ ) {
 //            seq_to_nongappy_pvec( m_qs_seqs[i], m_qs_pvecs[i] );
         //          static void seq_to_nongappy_pvec( std::vector<uint8_t> &seq, std::vector<uint8_t> &pvec ) {
@@ -296,7 +296,7 @@ void queries<seq_tag>::preprocess() {
         // the following line means: transform sequence to pvec using seq_model::s2p as mapping
         // function and only append the mapped character into pvec, if it corresponds to a single (=non gap)
         // character.
-        
+
         std::vector<uint8_t> qs_tmp;
         qs_tmp.reserve( m_qs_seqs[i].size() );
         bool bad_char = false;
@@ -321,12 +321,12 @@ void queries<seq_tag>::preprocess() {
                         seq_model::s2p );
 
 //         std::cout << "preprocess: " << i << " " << m_qs_cseqs[i].size() << " " << m_qs_pvecs[i].size() << "\n";
-        
+
         if( m_qs_cseqs[i].size() != m_qs_pvecs[i].size() ) {
             // check for quirks related to the p-state vs c-state representation
             throw std::runtime_error( "mismatch between lengths of c-state and p-state representations of query sequence." );
         }
-        
+
 //            for( unsigned int i = 0; i < seq.size(); i++ ) {
 //                seq_model::pars_state_t ps = seq_model::s2p(seq[i]);
 //
@@ -348,11 +348,11 @@ void queries<seq_tag>::preprocess() {
                 std::cout << "WARNING: there were unsupported characters in the query sequences. They will be deleted:\n";
                 warn_header = true;
             }
-            
+
             std::cout << "deleted character: '" << uint8_t(std::distance( bad_characters.begin(), it )) << "'\n";
         }
     }
-    
+
 //        if( write_testbench ) {
 //
 //            write_qs_pvecs( "qs.bin" );
@@ -364,7 +364,7 @@ void queries<seq_tag>::preprocess() {
 
 // template<typename pvec_t, typename seq_tag>
 // void queries<seq_tag>::init_partition_assignments( partassign::part_assignment &part_assign, references<pvec_t,seq_tag> &refs ) {
-//     
+//
 // }
 
 
@@ -464,12 +464,12 @@ references<pvec_t,seq_tag>::references(const char* opt_tree_name, const char* op
     tree_parser_ms::parser tp( opt_tree_name, pool );
     tree_parser_ms::lnode * n = tp.parse();
 
-    
-    
+
+
     n = towards_tree( n );
-    
+
     tree_ = std::shared_ptr<im_tree_parser::lnode>(n->get_smart_ptr());
-    
+
     //
     // create map from tip names to tip nodes
     //
@@ -611,7 +611,7 @@ references<pvec_t,seq_tag>::references(const char* opt_tree_name, const char* op
 
     // initialize empty non-gap map. It is lazily filled as needed when necessary
     ref_ng_map_.resize( m_ref_seqs.size() );
-    
+
     //
     // collect list of edges
     //
@@ -682,26 +682,26 @@ void references<pvec_t,seq_tag>::build_ref_vecs() {
 template<typename pvec_t, typename seq_tag>
 const std::vector<int> &references<pvec_t,seq_tag>::ng_map_at( size_t i ) {
     std::vector<int> &ng_map = ref_ng_map_.at(i);
-    
+
     if( !ng_map.empty() ) {
         return ng_map;
     }
-    
+
     //std::vector<int> map;
-    
+
     std::vector< uint8_t > &seq = m_ref_seqs.at(i);
     assert( seq.size() < size_t(std::numeric_limits<int>::max()) );
     for( size_t i = 0; i < seq.size(); ++i ) {
         bool is_gap = seq_model::pstate_is_gap( seq_model::s2p(seq[i]));
-        
+
         if( !is_gap ) {
             ng_map.push_back(int(i));
         }
     }
-    
+
     //ng_map.shrink_to_fit();
     std::vector<int>(ng_map).swap(ng_map); // old fashioned shrink_to_fit
-    
+
     return ng_map;
 }
 
@@ -829,7 +829,7 @@ class worker {
     }
 
 public:
-    worker( block_queue<seq_tag> *bq, scoring_results *res, const queries<seq_tag> &qs, size_t rank, const papara_score_parameters &sp ) 
+    worker( block_queue<seq_tag> *bq, scoring_results *res, const queries<seq_tag> &qs, size_t rank, const papara_score_parameters &sp )
       : block_queue_(*bq), results_(*res), qs_(qs), rank_(rank), sp_(sp) {}
     void operator()() {
 
@@ -857,10 +857,10 @@ public:
         align_vec_arrays<vu_scalar_t> arrays;
         aligned_buffer<vu_scalar_t> out_scores(VW);
         aligned_buffer<vu_scalar_t> out_scores2(VW);
-        
+
         size_t queue_size;
         size_t init_queue_size = -1;
-        
+
         while( true ) {
             block_t block;
 
@@ -871,7 +871,7 @@ public:
             if( init_queue_size == size_t(-1) ) {
                 init_queue_size = queue_size;
             }
-            
+
             if( cups_per_ref == uint64_t(-1) ) {
                 cups_per_ref = qs_.calc_cups_per_ref(block.ref_len );
             }
@@ -934,9 +934,9 @@ public:
             if( rank_ == 0 &&  tprint.elapsed() > 10 ) {
 
                 //std::cout << "thread " << rank_ << " " << ncup << " in " << tstatus.elapsed() << " : "
-                
+
                 float fdone = (init_queue_size - queue_size) / float(init_queue_size);
-                
+
                 lout << fdone * 100 << "% done. ";
                 lout << ncup / (tstatus.elapsed() * 1e9) << " gncup/s, " << ticks_all / double(inner_iters) << " tpili (short: " << ncup_short / (tprint.elapsed() * 1e9) << ", " << ticks_all_short / double(inner_iters_short) << ")" << std::endl;
 
@@ -1221,7 +1221,7 @@ std::vector< std::vector< uint8_t > > driver<pvec_t,seq_tag>::generate_traces(st
     std::vector<uint8_t> cand_trace;
 
     std::deque<size_t> bounded_bad_scores;
-    
+
     for( size_t i = 0; i < qs.size(); i++ ) {
         size_t best_edge = res.bestedge_at(i);
 
@@ -1242,10 +1242,10 @@ std::vector< std::vector< uint8_t > > driver<pvec_t,seq_tag>::generate_traces(st
 
 
 //         std::cout << "scores: " << score << " " << res.bestscore_at(i) << "\n";
-        
+
         std::pair<size_t,size_t> bounds = qs.get_per_qs_bounds( i );
-        
-        
+
+
         if( bounds.first == size_t(-1) ) {
             if( score != res.bestscore_at(i) ) {
                 std::cout << "meeeeeeep! score: " << res.bestscore_at(i) << " " << score << "\n";
@@ -1303,24 +1303,24 @@ std::vector< std::vector< uint8_t > > driver<pvec_t,seq_tag>::generate_traces(st
         }
 
     }
-    
+
     if( !bounded_bad_scores.empty() ) {
         std::cout << "There were internal problems handling per-gene QS. This is most likely due to overhangs into another partition. The overhangs will be chopped off, but the alignment may be wrong.\n";
-    
+
         std::cout << "QS names";
-            
+
             if( bounded_bad_scores.size() > 20 ) {
                 std::cout << " (showing only first 20 of " << bounded_bad_scores.size() << " QS names):\n";
             } else {
                 std::cout << " :\n";
             }
-            
+
             size_t m = std::min( bounded_bad_scores.size(), size_t(20) );
-                        
+
             for( size_t i = 0; i < m; ++i ) {
                 std::cout << qs.name_at( bounded_bad_scores[i] ) << "\n";
             }
-        
+
     }
 
 
@@ -1480,13 +1480,13 @@ void driver<pvec_t,seq_tag>::align_best_scores_oa( output_alignment *oa, const m
 
     std::vector<pars_state_t> out_qs_ps;
 
-    
+
 
     // supply non-open ofstreams to keep it quiet. This is actually quite a bad interface...
     std::ofstream os_quality;
     std::ofstream os_cands;
-    
-    
+
+
     // create the best alignment traces per qs
     std::vector<std::vector<uint8_t> > qs_traces = generate_traces(os_quality, os_cands, qs, refs, res, sp );
 
@@ -1506,14 +1506,14 @@ void driver<pvec_t,seq_tag>::align_best_scores_oa( output_alignment *oa, const m
         oa->set_size(refs.num_seqs() + qs.size(), refs.pvec_size());
     }
     oa->set_max_name_length( pad );
-    
+
     // write refs (and apply the ref gaps)
 
     std::vector<char> tmp;
     for( size_t i = 0; i < refs.num_seqs(); i++ ) {
         tmp.clear();
-        
-        
+
+
 
         if( ref_gaps ) {
             rgc.transform( refs.seq_at(i).begin(), refs.seq_at(i).end(), std::back_inserter(tmp), '-' );
@@ -1523,7 +1523,7 @@ void driver<pvec_t,seq_tag>::align_best_scores_oa( output_alignment *oa, const m
 
         oa->push_back( refs.name_at(i), tmp, output_alignment::type_ref );
         //std::transform( m_ref_seqs[i].begin(), m_ref_seqs[i].end(), std::ostream_iterator<char>(os), seq_model::normalize );
-        
+
     }
 
     std::deque<size_t> overhang_qs;
@@ -1538,21 +1538,21 @@ void driver<pvec_t,seq_tag>::align_best_scores_oa( output_alignment *oa, const m
             gapstream_to_alignment(qs_traces.at(i), qp, &out_qs_ps, seq_model::gap_pstate(), rgc);
         } else {
             gapstream_to_alignment_no_ref_gaps(qs_traces.at(i), qp, &out_qs_ps, seq_model::gap_pstate() );
-            
-            
-            
+
+
+
             // chop off QS parts that hang over into other partition
             std::pair<size_t,size_t> bounds = qs.get_per_qs_bounds(i);
-            
+
             if( bounds.first != size_t(-1) ) {
                 assert( bounds.second != size_t(-1) );
-                
+
                 assert( bounds.first < out_qs_ps.size() );
                 assert( bounds.second <= out_qs_ps.size() );
                 assert( bounds.first < bounds.second );
                 bool pre_overhang = false;
                 bool post_overhang = false;
-                
+
                 const typename seq_model::pars_state_t gap_state = seq_model::gap_pstate();
                 for( size_t j = 0; j < bounds.first; ++j ) {
                     if( out_qs_ps[j] != gap_state ) {
@@ -1560,40 +1560,40 @@ void driver<pvec_t,seq_tag>::align_best_scores_oa( output_alignment *oa, const m
                         pre_overhang = true;
                     }
                 }
-                
+
                 for( size_t j = bounds.second + 1; j < out_qs_ps.size(); ++j ) {
                     if( out_qs_ps[j] != gap_state ) {
                         out_qs_ps[j] = gap_state;
                         post_overhang = true;
                     }
                 }
-                
+
                 if( pre_overhang || post_overhang ) {
                     overhang_qs.push_back(i);
                 }
-                
+
             }
-            
+
         }
 
         if( !overhang_qs.empty() ) {
             std::cout << "WARNING: per-gene alignment, with overhangs into other partitons. chopped off.\nQS names";
-            
+
             if( overhang_qs.size() > 20 ) {
                 std::cout << " (showing only first 20 of " << overhang_qs.size() << " QS names):\n";
             } else {
                 std::cout << " :\n";
             }
-            
+
             size_t m = std::min( overhang_qs.size(), size_t(20) );
             for( size_t i = 0; i < m; ++i ) {
                 std::cout << qs.name_at( overhang_qs[i] ) << "\n";
             }
         }
-        
+
         //os << std::setw(pad) << std::left << qs.name_at(i);
         std::transform( out_qs_ps.begin(), out_qs_ps.end(), std::back_inserter(tmp), seq_model::p2s );
-        
+
         oa->push_back( qs.name_at(i), tmp, output_alignment::type_qs );
 
 
@@ -1643,13 +1643,13 @@ void output_alignment_phylip::push_back(const std::string& name, const out_seq& 
         os_ << num_rows_ << " " << num_cols_ << "\n";
         header_flushed_ = true;
     }
-    
+
     write_seq_phylip( name, seq );
 }
 
 void output_alignment_fasta::push_back(const std::string& name, const out_seq& seq, output_alignment::seq_type t) {
     os_ << ">" << name << "\n";
-    
+
     std::copy( seq.begin(), seq.end(), std::ostream_iterator<char>(os_) );
     os_ << "\n";
 }
