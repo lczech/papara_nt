@@ -62,6 +62,8 @@ public:
             if( overflow != 0 ) {
                 (*it)->put(overflow);
             }
+
+            (*it)->flush();
         }
 
 
