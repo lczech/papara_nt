@@ -50,5 +50,5 @@ filenames cannot contain commas. If you specify fewer files than MPI nodes, the 
 will do nothing.
 **Caveat:** If you however have more files than nodes, the surplus files will not be processed!
 This will hopefully change in the future - right now, this is a crude first MPI version of PaPaRa.
-Also be aware that the output of all nodes is mashed up, thus usually unreadable. Use the log
+Also be aware that the logging output of all nodes is mashed up, thus usually unreadable. Use the per-node log
 files to see what each node outputs.
